@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/gradient_background">
+
+    <!-- Header with the Back Arrow -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal"
+        android:padding="7dp"
+        android:background="@drawable/header_gradient">
+
+        <ImageView
+            android:id="@+id/backArrowIcon"
+            android:layout_width="25dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="8dp"
+            android:contentDescription="@string/back_arrow"
+            android:src="@drawable/baseline_arrow_back_24"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true" />
+
+        <!-- Header Title -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginRight="20dp"
+            android:text="About"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:gravity="center" />
+    </LinearLayout>
+
+    <!-- Logo Image Outside the Card, Below the Header -->
+    <ImageView
+        android:id="@+id/logoImage"
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="70dp"
+        android:src="@drawable/logo"
+        android:contentDescription="@string/logo_description" />
+
+    <!-- SafeStride Text Below the Logo -->
+    <TextView
+        android:id="@+id/safeStrideText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/logoImage"
+        android:layout_centerHorizontal="true"
+        android:text="SafeStride"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/holo_blue_bright"
+        android:gravity="center" />
+
+
+    <!-- Bigger CardView to hold 3 Features -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_below="@id/logoImage"
+    android:layout_marginTop="70dp"
+    android:layout_centerInParent="true"
+    app:cardElevation="6dp"
+    app:cardCornerRadius="12dp"
+    android:padding="24dp"
+    android:layout_marginEnd="70dp"
+    app:cardBackgroundColor="#BFFDFD">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="50dp">
+
+        <!-- Terms of Use -->
+        <LinearLayout
+            android:id="@+id/termsOfUse"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="openTermsOfUse">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Terms of Use"
+                android:textSize="18sp"
+                android:textColor="@android:color/black"
+                android:layout_weight="1"
+                android:layout_marginStart="10dp" />
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/backk"
+                android:layout_marginEnd="10dp"/>
+        </LinearLayout>
+
+        <!-- Line Below Terms of Use -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="8dp"
+            android:background="#6E6969"
+            android:layout_marginEnd="15dp"
+            android:layout_marginStart="15dp"/>
+
+        <!-- Privacy and Security -->
+        <LinearLayout
+            android:id="@+id/privacyAndSecurity"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="openPrivacyAndSecurity">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Privacy and Security"
+                android:textSize="18sp"
+                android:textColor="@android:color/black"
+                android:layout_weight="1"
+                android:layout_marginStart="10dp" />
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/backk"
+                android:layout_marginEnd="10dp"/>
+        </LinearLayout>
+
+        <!-- Line Below Privacy and Security -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="8dp"
+            android:background="#6E6969"
+            android:layout_marginEnd="15dp"
+            android:layout_marginStart="15dp"/>
+
+        <!-- Contact and Support -->
+        <LinearLayout
+            android:id="@+id/contactAndSupport"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="openContactAndSupport">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Contact and Support"
+                android:textSize="18sp"
+                android:textColor="@android:color/black"
+                android:layout_weight="1"
+                android:layout_marginStart="10dp" />
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/backk"
+                android:layout_marginEnd="10dp"/>
+        </LinearLayout>
+
+        <!-- Line Below Contact and Support -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="8dp"
+            android:background="#6E6969"
+            android:layout_marginEnd="15dp"
+            android:layout_marginStart="15dp"/>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
+
+    </RelativeLayout>
+

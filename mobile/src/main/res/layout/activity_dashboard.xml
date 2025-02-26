@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.drawerlayout.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/drawerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Main Content -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@drawable/gradient_background">
+
+        <!-- Dashboard Content -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@drawable/header_gradient"
+            android:paddingStart="16dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="5dp">
+
+            <!-- Menu Icon -->
+            <ImageView
+                android:id="@+id/menuIcon"
+                android:layout_width="27dp"
+                android:layout_height="27dp"
+                android:contentDescription="@string/menu_icon"
+                android:src="@drawable/drawer"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- SafeStride Text -->
+            <TextView
+                android:id="@+id/headerTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="SafeStride"
+                android:textColor="@android:color/holo_blue_bright"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/notificationBell"
+                app:layout_constraintStart_toEndOf="@id/menuIcon"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- Notification Bell Icon -->
+            <ImageView
+                android:id="@+id/notificationBell"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="@string/notification_icon"
+                android:src="@drawable/notification"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp">
+
+                <!-- Add Device Card -->
+
+                <!-- Features Title -->
+                <LinearLayout
+                    android:id="@+id/addDeviceCard"
+                    android:layout_width="0dp"
+                    android:layout_height="180dp"
+                    android:layout_marginTop="1dp"
+                    android:background="@drawable/rounded_graybox"
+                    android:elevation="6dp"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintWidth_percent="0.9"> <!-- Ensures content is centered horizontally -->
+
+                    <ImageView
+                        android:id="@+id/addDeviceIcon"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="16dp"
+                        android:contentDescription="@string/add_device"
+                        android:src="@drawable/add" />
+
+                    <TextView
+                        android:id="@+id/addDeviceText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center"
+                        android:text="Add Device"
+                        android:textColor="@android:color/holo_blue_bright"
+                        android:textSize="16sp" />
+
+
+                </LinearLayout>
+
+
+                <TextView
+                    android:id="@+id/featuresTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Features"
+                    android:textSize="25sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white"
+                    app:layout_constraintTop_toBottomOf="@id/addDeviceCard"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:layout_marginTop="25dp" />
+
+                <!-- Features Layout -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="vertical"
+                    app:layout_constraintTop_toBottomOf="@id/featuresTitle"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent">
+
+                    <!-- Card 1 -->
+                    <LinearLayout
+                        android:id="@+id/patientCard"
+                        android:layout_width="match_parent"
+                        android:layout_height="120dp"
+                        android:layout_margin="8dp"
+                        android:background="@drawable/feature_cardbg"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:weightSum="1">
+
+                        <!-- Image Icon -->
+                        <ImageView
+                            android:layout_width="80dp"
+                            android:layout_height="70dp"
+                            android:layout_marginStart="10dp"
+                            android:src="@drawable/adduser"
+                            android:contentDescription="@string/patient_icon"
+                            android:layout_marginEnd="16dp" />
+
+                        <!-- Title Text (Weight 1, takes remaining space) -->
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Person in Care"
+                            android:textStyle="bold"
+                            android:textColor="@android:color/holo_blue_bright"
+                            android:textSize="20sp"
+                            android:gravity="center_vertical" />
+
+                        <!-- Arrow Icon (Right) -->
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/arrowright"
+                        android:contentDescription="@string/right_arrow"
+                        android:layout_marginStart="16dp"
+                            android:layout_marginEnd="20dp"
+                        android:layout_gravity="center_vertical" />
+                    </LinearLayout>
+
+                    <!-- Card 2 -->
+                    <LinearLayout
+                        android:id="@+id/cardRecords"
+                        android:layout_width="match_parent"
+                        android:layout_height="120dp"
+                        android:layout_margin="8dp"
+                        android:background="@drawable/feature_cardbg"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:weightSum="1">
+
+                        <!-- Image Icon -->
+                        <ImageView
+                            android:layout_width="80dp"
+                            android:layout_height="70dp"
+                            android:layout_marginStart="10dp"
+                            android:src="@drawable/records"
+                            android:contentDescription="@string/records_icon"
+                            android:layout_marginEnd="16dp" />
+
+                        <!-- Title Text (Weight 1, takes remaining space) -->
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Records"
+                            android:textStyle="bold"
+                            android:textColor="@android:color/holo_blue_bright"
+                            android:textSize="20sp"
+                            android:gravity="center_vertical" />
+
+                        <!-- Arrow Icon (Right) -->
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/arrowright"
+                            android:contentDescription="@string/right_arrow"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="20dp"
+                            android:layout_gravity="center_vertical" />
+                    </LinearLayout>
+
+                    <!-- Card 3 -->
+                    <LinearLayout
+                        android:id="@+id/cardReminder"
+                        android:layout_width="match_parent"
+                        android:layout_height="120dp"
+                        android:layout_margin="8dp"
+                        android:background="@drawable/feature_cardbg"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:weightSum="1">
+
+                        <!-- Image Icon -->
+                        <ImageView
+                            android:layout_width="80dp"
+                            android:layout_height="70dp"
+                            android:layout_marginStart="10dp"
+                            android:src="@drawable/reminders"
+                            android:contentDescription="@string/reminder_icon"
+                            android:layout_marginEnd="16dp" />
+
+                        <!-- Title Text (Weight 1, takes remaining space) -->
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Reminder"
+                            android:textColor="@android:color/holo_blue_bright"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:gravity="center_vertical" />
+
+                        <!-- Arrow Icon (Right) -->
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/arrowright"
+                            android:contentDescription="@string/right_arrow"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="20dp"
+                            android:layout_gravity="center_vertical" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </ScrollView>
+    </LinearLayout>
+
+
+
+<com.google.android.material.navigation.NavigationView
+        android:id="@+id/navigationView"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:fitsSystemWindows="true"
+        android:background="@drawable/drawer_bg"
+        app:headerLayout="@layout/nav_header"
+        app:itemIconTint="@color/black"
+        app:itemTextColor="@color/black"
+        app:menu="@menu/drawer_menu" />
+
+</androidx.drawerlayout.widget.DrawerLayout>

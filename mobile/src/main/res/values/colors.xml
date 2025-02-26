@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="gray">#8F8D8D</color>
+    <color name="light_blue">#E0F7FA</color>
+    <color name="darkblue">#001959</color>
+    <color name="graybox_color">#4F868F</color>
+    <color name="lightt_blue">#ADD8E6</color>
+
+
+</resources>
