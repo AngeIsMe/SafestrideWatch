@@ -14,17 +14,35 @@
         android:textSize="18sp"
         android:gravity="center" />
 
+    <!-- Button to Scan for BLE Devices -->
+    <Button
+        android:id="@+id/btn_scan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Scan for Devices"
+        android:layout_marginBottom="16dp" />
+
+    <!-- ListView to Show Scanned Devices -->
+
+    <ListView
+        android:id="@+id/device_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Button to Send Notification -->
     <Button
         android:id="@+id/btn_notify"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Send Notification" />
+        android:text="Send Notification"
+        android:layout_marginBottom="16dp" />
 
+    <!-- Button to Send Data via BLE -->
     <Button
         android:id="@+id/btn_send_data"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Send Data via BLE"
-        android:layout_marginTop="16dp" />
-
+        android:text="Send Data via BLE" />
 </LinearLayout>
+

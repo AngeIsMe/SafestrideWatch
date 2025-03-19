@@ -9,12 +9,15 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
+import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.capstone.safestridew.R
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import java.util.UUID
-
 
 class BLEActivity : AppCompatActivity() {
 
@@ -22,271 +25,241 @@ class BLEActivity : AppCompatActivity() {
         private const val PERMISSION_REQUEST_CODE = 1
     }
 
+    private lateinit var bluetoothAdapter: BluetoothAdapter
+    private lateinit var bluetoothLeScanner: BluetoothLeScanner
+    private var bluetoothGatt: BluetoothGatt? = null
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private val deviceList = mutableListOf<BluetoothDevice>()
+    private lateinit var deviceListView: ListView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ble)
 
-        if (hasPermissions()) {
-            startBLEScan()
+        val bluetoothManager = getSystemService(BLUETOOTH_SERVICE) as BluetoothManager
+        bluetoothAdapter = bluetoothManager.adapter
+        bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        val btnScan = findViewById<Button>(R.id.btn_scan)
+        deviceListView = findViewById(R.id.device_list)
+
+        btnScan.setOnClickListener {
+            if (hasPermissions()) {
+                startBLEScan()
+            } else {
+                requestPermissionsIfNecessary()
+            }
+        }
+
+        deviceListView.setOnItemClickListener { _, _, position, _ ->
+            val device = deviceList[position]
+            connectToDevice(device)
+        }
+
+        // Check location permissions and fetch location
+        if (checkLocationPermissions()) {
+            fetchLocation()
         } else {
-            requestPermissionsIfNecessary()
+            requestLocationPermissions()
         }
     }
 
-    private fun startBLEScan() {
-        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+    private fun hasPermissions(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+        } else {
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        }
+    }
 
-        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
-            Toast.makeText(this, "Bluetooth is not enabled or not available.", Toast.LENGTH_SHORT)
-                .show()
+    private fun requestPermissionsIfNecessary() {
+        val permissions = mutableListOf<String>().apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                add(Manifest.permission.BLUETOOTH_SCAN)
+                add(Manifest.permission.BLUETOOTH_CONNECT)
+            } else {
+                add(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        }
+        ActivityCompat.requestPermissions(this, permissions.toTypedArray(), PERMISSION_REQUEST_CODE)
+    }
+
+    private fun checkLocationPermissions(): Boolean {
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestLocationPermissions() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+            100
+        )
+    }
+
+    private fun fetchLocation() {
+        try {
+            if (ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        val latitude = location.latitude
+                        val longitude = location.longitude
+                        Log.d("GPS", "Location: $latitude, $longitude")
+                        sendLocationToPhone(latitude, longitude)
+                    } else {
+                        Log.e("GPS", "Location is null")
+                        Toast.makeText(this, "Unable to fetch location.", Toast.LENGTH_SHORT).show()
+                    }
+                }.addOnFailureListener { e ->
+                    Log.e("GPS", "Failed to fetch location: ${e.message}")
+                    Toast.makeText(this, "Failed to fetch location.", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Log.e("Permission", "Location permission not granted.")
+                Toast.makeText(this, "Location permission is required.", Toast.LENGTH_SHORT).show()
+                requestLocationPermissions()
+            }
+        } catch (e: SecurityException) {
+            Log.e("GPS", "SecurityException: ${e.message}")
+            Toast.makeText(this, "Permission issue occurred.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+    private fun sendLocationToPhone(latitude: Double, longitude: Double) {
+        try {
+            val data = "$latitude,$longitude".toByteArray()
+            val characteristic = getCharacteristicForSendingData() // Replace with your BLE characteristic
+
+            if (characteristic != null) {
+                characteristic.value = data
+                val success = bluetoothGatt?.writeCharacteristic(characteristic) ?: false
+                if (success) {
+                    Log.d("BLE", "Location data sent successfully.")
+                } else {
+                    Log.e("BLE", "Failed to send location data.")
+                    Toast.makeText(this, "Failed to send data.", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Log.e("BLE", "Characteristic is null.")
+                Toast.makeText(this, "BLE characteristic not found.", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: SecurityException) {
+            Log.e("BLE", "SecurityException: ${e.message}")
+            Toast.makeText(this, "Permission issue during BLE operation.", Toast.LENGTH_SHORT).show()
+        }
+    }
+    private fun getCharacteristicForSendingData(): BluetoothGattCharacteristic? {
+        bluetoothGatt?.services?.forEach { service ->
+            service.characteristics.forEach { characteristic ->
+                if (characteristic.uuid == UUID.fromString("YOUR_CHARACTERISTIC_UUID")) {
+                    return characteristic
+                }
+            }
+        }
+        return null
+    }
+
+    private fun startBLEScan() {
+        if (!bluetoothAdapter.isEnabled) {
+            Toast.makeText(this, "Bluetooth is not enabled.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
-        val scanCallback = object : ScanCallback() {
-            override fun onScanResult(callbackType: Int, result: ScanResult) {
-                super.onScanResult(callbackType, result)
-                val deviceName = getDeviceName(result)
-                Log.d("BLEActivity", "Device Found: $deviceName - ${result.device.address}")
-
-                // Automatically stop scan and connect to the device
-                stopBLEScan(bluetoothLeScanner, this)
-                connectToDevice(result.device)
-            }
-
-            override fun onBatchScanResults(results: MutableList<ScanResult>) {
-                super.onBatchScanResults(results)
-                for (result in results) {
-                    val deviceName = getDeviceName(result)
-                    Log.d(
-                        "BLEActivity",
-                        "Batch Device Found: $deviceName - ${result.device.address}"
-                    )
-                }
-            }
-
-            override fun onScanFailed(errorCode: Int) {
-                super.onScanFailed(errorCode)
-                Log.e("BLEActivity", "Scan Failed with Error: $errorCode")
-            }
-        }
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.BLUETOOTH_SCAN
-            ) != PackageManager.PERMISSION_GRANTED
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED
         ) {
             Toast.makeText(this, "Permission denied for scanning.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        bluetoothLeScanner.startScan(scanCallback)
-        Toast.makeText(this, "Scanning for devices...", Toast.LENGTH_SHORT).show()
+        try {
+            bluetoothLeScanner.startScan(object : ScanCallback() {
+                override fun onScanResult(callbackType: Int, result: ScanResult) {
+                    val device = result.device
+                    if (!deviceList.contains(device) && device.name != null) {
+                        deviceList.add(device)
+                        updateDeviceList()
+                    }
+                }
+
+                override fun onScanFailed(errorCode: Int) {
+                    Toast.makeText(this@BLEActivity, "Scan failed: $errorCode", Toast.LENGTH_SHORT).show()
+                }
+            })
+            Toast.makeText(this, "Scanning for devices...", Toast.LENGTH_SHORT).show()
+        } catch (e: SecurityException) {
+            Log.e("BLEActivity", "SecurityException: ${e.message}")
+        }
     }
 
-    private fun stopBLEScan(bluetoothLeScanner: BluetoothLeScanner?, scanCallback: ScanCallback?) {
-        if (bluetoothLeScanner == null || scanCallback == null) {
-            Log.e("BLEActivity", "BluetoothLeScanner or ScanCallback is null.")
-            return
+    private fun updateDeviceList() {
+        val deviceNames = deviceList.map { device ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
+            ) {
+                "Unknown Device (${device.address})"
+            } else {
+                "${device.name} (${device.address})"
+            }
         }
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.BLUETOOTH_SCAN
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
-        bluetoothLeScanner.stopScan(scanCallback)
-        Toast.makeText(this, "Scan stopped.", Toast.LENGTH_SHORT).show()
+
+        val adapter = android.widget.ArrayAdapter(this, android.R.layout.simple_list_item_1, deviceNames)
+        deviceListView.adapter = adapter
     }
 
     private fun connectToDevice(device: BluetoothDevice) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.BLUETOOTH_CONNECT
-            ) != PackageManager.PERMISSION_GRANTED
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
         ) {
             Toast.makeText(this, "Permission denied for connecting.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        Log.d("BLEActivity", "Connecting to device: ${device.name} - ${device.address}")
-        device.connectGatt(this, false, object : BluetoothGattCallback() {
-            override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
-                super.onConnectionStateChange(gatt, status, newState)
-                when (newState) {
-                    BluetoothProfile.STATE_CONNECTED -> {
-                        Log.d("BLEActivity", "Connected to GATT server.")
-                        if (ActivityCompat.checkSelfPermission(
-                                /* context = */ this@BLEActivity, // Explicitly reference the activity context
-                                /* permission = */ Manifest.permission.BLUETOOTH_CONNECT
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            // TODO: Consider calling
-                            //    ActivityCompat#requestPermissions
-                            // here to request the missing permissions, and then overriding
-                            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                            //                                          int[] grantResults)
-                            // to handle the case where the user grants the permission. See the documentation
-                            // for ActivityCompat#requestPermissions for more details.
-                            return
+        try {
+            bluetoothGatt = device.connectGatt(this, false, object : BluetoothGattCallback() {
+                override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+                    when (newState) {
+                        BluetoothProfile.STATE_CONNECTED -> {
+                            Log.d("BLEActivity", "Connected to ${device.name}")
+                            runOnUiThread {
+                                Toast.makeText(this@BLEActivity, "Connected to ${device.name}", Toast.LENGTH_SHORT).show()
+                            }
+                            gatt?.discoverServices()
                         }
-                        gatt?.discoverServices()
-                    }
-
-                    BluetoothProfile.STATE_DISCONNECTED -> {
-                        Log.d("BLEActivity", "Disconnected from GATT server.")
-                    }
-
-                    else -> {
-                        Log.d("BLEActivity", "Unknown state: $newState")
-                    }
-                }
-            }
-
-            override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-                super.onServicesDiscovered(gatt, status)
-                if (status == BluetoothGatt.GATT_SUCCESS) {
-                    Log.d("BLEActivity", "Services discovered: ${gatt?.services?.size}")
-                    gatt?.services?.forEach { service ->
-                        Log.d("BLEActivity", "Service UUID: ${service.uuid}")
-                        service.characteristics.forEach { characteristic ->
-                            Log.d("BLEActivity", "Characteristic UUID: ${characteristic.uuid}")
-
-                            // Enable notifications for specific characteristic
-                            enableNotifications(gatt, characteristic)
+                        BluetoothProfile.STATE_DISCONNECTED -> {
+                            Log.d("BLEActivity", "Disconnected from ${device.name}")
+                            runOnUiThread {
+                                Toast.makeText(this@BLEActivity, "Disconnected from ${device.name}", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     }
-                } else {
-                    Log.e("BLEActivity", "Service discovery failed with status: $status")
                 }
-            }
 
-            override fun onCharacteristicRead(
-                gatt: BluetoothGatt?,
-                characteristic: BluetoothGattCharacteristic?,
-                status: Int
-            ) {
-                super.onCharacteristicRead(gatt, characteristic, status)
-                if (status == BluetoothGatt.GATT_SUCCESS) {
-                    val data = characteristic?.value
-                    Log.d("BLEActivity", "Characteristic read: ${data?.contentToString()}")
+                override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
+                    if (status == BluetoothGatt.GATT_SUCCESS) {
+                        Log.d("BLEActivity", "Services discovered successfully.")
+                        gatt?.services?.forEach { service ->
+                            Log.d("BLEActivity", "Service UUID: ${service.uuid}")
+                            service.characteristics.forEach { characteristic ->
+                                Log.d("BLEActivity", "Characteristic UUID: ${characteristic.uuid}")
+                            }
+                        }
+                        runOnUiThread {
+                            Toast.makeText(this@BLEActivity, "Services discovered. Check logs for UUIDs.", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        Log.e("BLEActivity", "Failed to discover services. Status: $status")
+                    }
                 }
-            }
-
-            override fun onCharacteristicChanged(
-                gatt: BluetoothGatt?,
-                characteristic: BluetoothGattCharacteristic?
-            ) {
-                super.onCharacteristicChanged(gatt, characteristic)
-                val data = characteristic?.value
-                Log.d("BLEActivity", "Characteristic changed: ${data?.contentToString()}")
-            }
-        })
-    }
-
-    private fun enableNotifications(
-        gatt: BluetoothGatt,
-        characteristic: BluetoothGattCharacteristic
-    ) {
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.BLUETOOTH_CONNECT
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return
-        }
-        gatt.setCharacteristicNotification(characteristic, true)
-        val descriptor =
-            characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"))
-        descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-        gatt.writeDescriptor(descriptor)
-    }
-
-    private fun getDeviceName(result: ScanResult): String {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
-                result.device.name ?: "Unknown Device"
-            } else {
-                "Permission Denied"
-            }
-        } else {
-            result.device.name ?: "Unknown Device"
-        }
-    }
-
-    private fun hasPermissions(): Boolean {
-        return when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED &&
-                        checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
-            }
-
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
-                checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-            }
-
-            else -> {
-                checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-            }
-        }
-    }
-
-    private fun requestPermissionsIfNecessary() {
-        val permissions = mutableListOf<String>()
-
-        when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                permissions.add(Manifest.permission.BLUETOOTH_SCAN)
-                permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
-            }
-
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
-                permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
-            }
-
-            else -> {
-                permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
-            }
-        }
-
-        if (permissions.isNotEmpty()) {
-            ActivityCompat.requestPermissions(
-                this,
-                permissions.toTypedArray(),
-                PERMISSION_REQUEST_CODE
-            )
-        }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            val allGranted =
-                grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }
-            if (allGranted) {
-                startBLEScan()
-            } else {
-                Toast.makeText(
-                    this,
-                    "Please enable Bluetooth permissions to continue.",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+            })
+        } catch (e: SecurityException) {
+            Log.e("BLEActivity", "SecurityException during connectGatt: ${e.message}")
         }
     }
 }
